@@ -16,6 +16,8 @@ if(firstrun>0) {
 # Load Libraries
 library(dplyr)
 library(ggplot2)
+library(grid)
+library(gridExtra)
 library(data.table)   # For like function (%like%)
 
 
@@ -25,8 +27,8 @@ malarria_bycountry_data  <-"2022_04_25_Impact_of_innovation_malaria_country.csv"
 
 
 #---- Set working directory
-wd   <- setwd("/Users/mc1405/Dropbox/The Global Fund/Investment Case - Unitaid/2022-2024 IC/Modelling Work/outputs/")
-
+wd        <- setwd("/Users/mc1405/Dropbox/The Global Fund/Investment Case - Unitaid/2022-2024 IC/Modelling Work/outputs/")
+wd_output <- setwd("/Users/mc1405/Dropbox/The Global Fund/Investment Case - Unitaid/2022-2024 IC/Modelling Work/Mikaela Code/")
 #---- Harmonize variable names
 
 malaria_cases_ic  <- "cases_Replenishment"
@@ -159,6 +161,9 @@ ggplot(data = malaria_adj, aes(x = year)) +
   scale_y_continuous(limits = c(0, 300000000)) +
   labs(color = "Legend")
 
+
+ggsave(path = wd_output, filename = Malaria_Cases_Portfolio.pdf)
+
 # Plot Malaria Deaths
 ggplot(data = malaria_adj, aes(x = year)) +
   geom_point(aes(year, deaths_ic), colour = "black") +
@@ -169,7 +174,49 @@ ggplot(data = malaria_adj, aes(x = year)) +
   scale_y_continuous(limits = c(0, 1000000)) +
   labs(color = "Legend")
 
+ggsave(path = wd_output, filename = Malaria_Deaths_Portfolio.pdf)
+
+
+# --- Now plot for each country
+
+# First for cases
+lg <- list()
+
+for(i in 1:length(iso)){
   
+  temp <- malaria_by_country_adj %>% dplyr::filter(ISO == iso[i])
+  
+  lg[[i]]<-ggplot(data = temp, aes(x = year)) +
+    geom_point(aes(year, cases_Replenishment), colour = "black") +
+    geom_line(aes(year, cases_Replenishment, colour = "UNITAID IC")) +
+    geom_point(aes(year, cases_Counterfactual), colour = "black") +
+    geom_line(aes(year, cases_Counterfactual, colour = "UNITAID CF")) +
+    labs(x = "Year", y = " Number of Cases", title = iso[i]) +
+    expand_limits(y=0) +
+    labs(color = "Legend")
+}
+
+ggsave("Cases by country.pdf", marrangeGrob(grobs = lg, nrow = 3, ncol = 2), width = 210, height = 297, unit = "mm")
+
+# Then for deaths
+lg <- list()
+
+for(i in 1:length(iso)){
+  
+  temp <- malaria_by_country_adj %>% dplyr::filter(ISO == iso[i])
+  
+  lg[[i]]<-ggplot(data = temp, aes(x = year)) +
+    geom_point(aes(year, deaths_Replenishment), colour = "black") +
+    geom_line(aes(year, deaths_Replenishment, colour = "UNITAID IC")) +
+    geom_point(aes(year, deaths_Counterfactual), colour = "black") +
+    geom_line(aes(year, deaths_Counterfactual, colour = "UNITAID CF")) +
+    labs(x = "Year", y = " Number of Deaths", title = iso[i]) +
+    expand_limits(y=0) +
+    labs(color = "Legend")
+}
+
+ggsave(filename = "Deaths by country.pdf", marrangeGrob(grobs = lg, nrow = 3, ncol = 2), width = 210, height = 297, unit = "mm")
+             
 
 
 ##################
@@ -213,6 +260,7 @@ ggplot(malaria_adj, aes(year, y=value, colour = variable)) +
   geom_point(aes(y = cases_cf, colour = "blue"))+
   labs(color = "Legend")
 
+  
   
   
   
